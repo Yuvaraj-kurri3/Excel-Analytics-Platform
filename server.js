@@ -1,10 +1,16 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
-dotenv.config();
+const bodyParser = require('body-parser');
+const Controllers= require('./backend/Controllers/SignupController');
+const cors = require("cors");
 
 const app = express();
-const port = 3000;
+
+app.use(cors());
+dotenv.config();
+
+const port = 5000;
 
 // Middleware to parse JSON bodies
 app.use(express.json());
@@ -14,18 +20,11 @@ mongoose.connect(process.env.MONGODB_URI)
 }).catch(err => {
     console.error('MongoDB connection error:', err);
 });
+// Signin route
+app.post("/signup", Controllers.signupController);
 // login route
-app.post('/login', (req, res) => {
-    const { username, password } = req.body;
-    // Here you would typically check the credentials against a database
-    if (username === 'admin' && password === 'password') {
-        res.status(200).send({ message: 'Login successful!' });
-    } else {
-        res.status(401).send({ message: 'Invalid credentials' });
-    }
-});
-
-app.get('/', (req, res) => {
+app.post("/login", Controllers.loginController);
+ app.get('/', (req, res) => {
     res.send('Welcome to the Excel Analytics Platform!');
 });
 
