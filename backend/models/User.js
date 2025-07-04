@@ -1,7 +1,7 @@
 const mongoose=require('mongoose');
 const Schema=mongoose.Schema;
 
-const Signup=new Schema({
+const User=new Schema({
     username:{
         type: String,
         required: true,
@@ -20,4 +20,4 @@ const Signup=new Schema({
  
 );
 
-module.exports=mongoose.model('Signup',Signup);
+module.exports=mongoose.model('User',User);
