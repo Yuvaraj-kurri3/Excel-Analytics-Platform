@@ -1,17 +1,32 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Login = () => {
   const [form, setForm] = useState({ email: '', password: '' });
+  const [responseMsg, setResponseMsg] = useState('');
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Login Data:', form);
-    // You can call backend API here
+    setResponseMsg('');
+    try {
+      const response = await axios.post('/api/auth/login', form);
+      setResponseMsg(response.data.message || 'Login successful!');
+      if (response.data.message === 'Login successful') {
+        setTimeout(() => navigate('/home'), 1000);
+      }
+    } catch (error) {
+      if (error.response && error.response.data && error.response.data.error) {
+        setResponseMsg('Error: ' + error.response.data.error);
+      } else {
+        setResponseMsg('Login failed. Please try again.');
+      }
+    }
   };
 
   return (
@@ -22,6 +37,7 @@ const Login = () => {
           type="email"
           name="email"
           placeholder="Email"
+          required
           value={form.email}
           onChange={handleChange}
           className="w-full mb-4 p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -30,6 +46,7 @@ const Login = () => {
           type="password"
           name="password"
           placeholder="Password"
+          required
           value={form.password}
           onChange={handleChange}
           className="w-full mb-4 p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -40,9 +57,12 @@ const Login = () => {
         >
           Login
         </button>
+        {responseMsg && (
+          <div className="mt-4 text-center text-sm text-red-600">{responseMsg}</div>
+        )}
         <p className="mt-4 text-center text-sm text-gray-600">
           Don't have an account?{' '}
-          <Link to="./signup" className="text-purple-700 hover:underline">Sign up</Link>
+          <Link to="/signup" className="text-purple-700 hover:underline">Sign up</Link>
         </p>
       </form>
     </div>

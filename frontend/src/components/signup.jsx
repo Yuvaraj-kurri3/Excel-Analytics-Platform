@@ -1,18 +1,30 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 
 const Signup = () => {
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [form, setForm] = useState({ username: '', email: '', password: '' });
+  const [responseMsg, setResponseMsg] = useState('');
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Signup Data:', form);
-    // You can call backend API here
+    setResponseMsg('');
+    try {
+      const response = await axios.post('/api/auth/signup', form);
+      setResponseMsg(response.data.message || 'Signup successful!');
+      // Example: localStorage.setItem('token', response.data.token);
+    } catch (error) {
+      if (error.response && error.response.data && error.response.data.error) {
+        setResponseMsg('Error: ' + error.response.data.error);
+      } else {
+        setResponseMsg(' Signup failed. Please try again.');
+      }
+    }
   };
 
   return (
@@ -21,10 +33,10 @@ const Signup = () => {
         <h2 className="text-2xl font-bold text-purple-700 mb-6 text-center">Signup</h2>
         <input
           type="text"
-          name="name"
+          name="username"
           placeholder="Name"
           required
-          value={form.name}
+          value={form.username}
           onChange={handleChange}
           className="w-full mb-4 p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
 
@@ -52,8 +64,11 @@ const Signup = () => {
           type="submit"
           className="w-full bg-purple-700 text-white py-2 rounded-md hover:bg-purple-800"
         >
-          Login
+          Signup
         </button>
+        {responseMsg && (
+          <div className="mt-4 text-center text-sm text-red-600">{responseMsg}</div>
+        )}
         <p className="mt-4 text-center text-sm text-gray-600">
           Already have an account?{' '}
           <Link to="/" className="text-purple-700 hover:underline">Login</Link>
