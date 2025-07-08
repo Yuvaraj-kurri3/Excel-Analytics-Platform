@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+
 
 
 const Signup = () => {
   const [form, setForm] = useState({ username: '', email: '', password: '' });
   const [responseMsg, setResponseMsg] = useState('');
-
+  const navigate = useNavigate();
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -17,6 +19,9 @@ const Signup = () => {
     try {
       const response = await axios.post('/api/auth/signup', form);
       setResponseMsg(response.data.message || 'Signup successful!');
+       if (response.data.message === 'Signup successful!') {
+        setTimeout(() => navigate('/login'), 500);
+      }
       // Example: localStorage.setItem('token', response.data.token);
     } catch (error) {
       if (error.response && error.response.data && error.response.data.error) {
@@ -71,7 +76,7 @@ const Signup = () => {
         )}
         <p className="mt-4 text-center text-sm text-gray-600">
           Already have an account?{' '}
-          <Link to="/" className="text-purple-700 hover:underline">Login</Link>
+          <Link to="/login" className="text-purple-700 hover:underline">Login</Link>
         </p>
       </form>
     </div>
