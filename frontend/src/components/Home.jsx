@@ -57,7 +57,11 @@ export default function Home() {
                 <Link to={"/contact"} className="text-white hover:text-green-300 transition duration-300 ease-in-out transform hover:scale-110">Contact</Link>
             </li>
             <li>
-              <a href="/contact" className="text-white hover:text-red-400 transition duration-300 ease-in-out transform hover:scale-110">Logout</a>
+              <a href="#" className="text-white hover:text-red-400 transition duration-300 ease-in-out transform hover:scale-110"
+              onClick={() => {
+                alert("Logout functionality is not implemented yet.");
+              }}
+              >Logout</a>
             </li>
           </ul>
         </nav>
@@ -84,7 +88,7 @@ export default function Home() {
             className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75"
           
           >
-         <Link to={"/signin"}>Signin</Link>
+         <Link to={"/login"}>Signin</Link>
           </button>
           <button
             className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-opacity-75"
