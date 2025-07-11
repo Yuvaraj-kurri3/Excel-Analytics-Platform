@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Github, Linkedin, Link } from 'lucide-react'; // Using lucide-react for icons
+import { Mail,} from 'lucide-react'; // Using lucide-react for icons
 
 // Main App component for the Contact Us page
 const App = () => {

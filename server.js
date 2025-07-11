@@ -16,8 +16,14 @@ app.use(express.json());
 
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
+
+https://excel-analytics-platform-d8c0.onrender.com
+// app.use(cors({
+//   origin: 'http://localhost:3000', // your frontend origin
+//   credentials: true
+// }));
 app.use(cors({
-  origin: 'http://localhost:3000', // your frontend origin
+  origin: 'https://excel-analytics-platform-d8c0.onrender.com', // your frontend origin
   credentials: true
 }));
 const sessions_store = new mongooseSession({

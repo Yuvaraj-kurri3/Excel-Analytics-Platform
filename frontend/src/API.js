@@ -1,7 +1,8 @@
 import axios from "axios";
 axios.defaults.withCredentials = true;
+// const BASE_URL = "localhost:5000"; // Change this to your backend URL if needed
+const BASE_URL = "https://excel-analytics-backend.onrender.com";
 
-const BASE_URL = "http://localhost:5000"; // Replace with your backend URL
 
 export const login = (data) => {
   return axios.post(`${BASE_URL}/api/auth/login`, data,{
