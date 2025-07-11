@@ -8,14 +8,13 @@ const session = require('express-session');
 const mongooseSession = require('connect-mongodb-session')(session);
 //import session from 'express-session';
 
-const app = express();
-dotenv.config();  
+ dotenv.config();  
 
 
  
 exports.signup = async (req, res) => {
   const { username, email, password } = req.body;
-
+  console.log(req.body);
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ error: 'Email already exists' });
@@ -26,7 +25,7 @@ exports.signup = async (req, res) => {
     await newUser.save();
     res.status(201).json({ message: 'Signup successful!' });
   } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error from route' });
   }
   // if(!username || !email || !password) {
   //   return res.status(400).json({ error: 'All fields are required' });
@@ -44,19 +43,26 @@ exports.login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
 
-    const token = jwt.sign(
-      { id: user._id, username: user.username },
-      process.env.JWT_SECRET,
-      { expiresIn: '2d' }
-    );
-    res.cookie('token', token, { httpOnly: true, maxAge: 2 * 24 * 60 * 60 * 1000 });
+    const token = jwt.sign({ id: user._id, username: user.email }, process.env.JWT_SECRET,{ expiresIn: '2d' });
+  // storing JWT token in cookie
+
+  res.cookie('token', token, {
+  httpOnly: true,
+  maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days
+  sameSite: 'lax',
+  secure: false // set true in production
+});
+  
     req.session.user = {
-      email: user.email,
-      isAuthenticated: true
-    };
-    res.json({ message: 'Login successful' });
+  id: user._id,
+  email: user.email,
+  isAuthenticated: true,
+ 
+};
+console.log("🔐 Session after login:", req.session);
+  res.status(201).json({ message: 'Login successfull' });
   } catch (err) {
-    console.log(err);
+    console.log('From 55 login controller'+err);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -64,10 +70,11 @@ exports.login = async (req, res) => {
  
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
+  console.log("Forgot Password Request:", req.body);
   try {
     // Check if user exists
     const user = await User.findOne({ email });
-    if (!user) return res.status(200).json({ message: 'Enter Correct Mail' });
+    if (!user) return res.status(400).json({ message: 'Enter Correct Mail' });
 
     // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -103,6 +110,7 @@ exports.forgotPassword = async (req, res) => {
 
 exports.verifyOtp = async (req, res) => {
   const {  otp } = req.body;
+  console.log("OTP Verification Request:", req.body);
   try {
     // Check if OTP exists for the user
     if (req.session.user &&req.session.user.otp === otp) {
@@ -139,3 +147,58 @@ exports.resetPassword = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 }
+
+// logout controller
+exports.logout = async (req, res) => {
+  res.clearCookie('token');
+  try {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ error: 'Failed to log out' });
+      }
+       res.status(200).json({ message: 'Logout successful' });
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+}
+
+// Middleware to verify JWT token from cookies
+exports.verifyToken = (req, res, next) => {
+  const token = req.session.user.TOKEN ;
+  if (!token) {
+    return res.status(401).json({ isLoggedIn: false, error: 'No token provided' });
+  }
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ isLoggedIn: false, error: 'Invalid token' });
+    }
+    req.user = decoded;
+    next();
+  });
+};
+
+// check user login or not using JWT token
+exports.isLoggedIn = (req, res) => {
+  const sessionUser = req.session.user;
+  const token = req.cookies.token;
+
+  if (!sessionUser || !token) {
+    return res.status(401).json({ isLoggedIn: false, error: 'Invalid Credidentals' });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) return res.status(401).json({ isLoggedIn: false, error: 'Invalid token' });
+
+    return res.status(200).json({
+      isLoggedIn: true,
+      sessionUser,
+      decodedToken: decoded
+    });
+  });
+};
+
+// exports.testsession=(req, res) => {
+//   res.json(req.session);
+// }
+ 

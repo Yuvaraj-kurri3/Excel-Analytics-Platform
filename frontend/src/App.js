@@ -6,9 +6,10 @@ import About from './components/navbar/about';
 import Services from './components/navbar/services';
 import Contact from './components/navbar/contact';
 import Home from './components/Home';
+import Dashboard from './components/Dashboard';
 import Forgot from './components/Forgotpassword'; // Uncomment if you want to use Forgot password component
 import OtpVerification from './components/verification';
-import Resetpassword from './components/Resetpassword'; // Uncomment if you want to use Reset password component
+import Resetpassword from './components/Resetpassword';  
 
 function App() {
   return (
@@ -19,9 +20,11 @@ function App() {
       <Route path="/services" element={<Services />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/" element={<Home />} />
+      <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/forgot" element={<Forgot  />} />
       <Route path="/OtpVerification" element={<OtpVerification />} />
       <Route path="/Resetpassword" element={<Resetpassword />} />
+
     </Routes>
   );
 }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { verifyOtp } from '../API'; // Import the verifyOtp function from API.js
 
 const OtpVerification = () => {
   const [otp, setOtp] = useState('');
@@ -10,7 +10,7 @@ const OtpVerification = () => {
     e.preventDefault();
     setResponseMsg('');
     try {
-        let response= await axios.post('/api/auth/verify-otp', { otp });
+        let response= await verifyOtp(otp);
      if (response.data.message === 'Valid OTP') {
         setTimeout(() => navigate('/Resetpassword'), 1000);
       }
@@ -22,6 +22,7 @@ const OtpVerification = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-purple-600 to-pink-500">
+      <title>OTP Verification - EAP</title>
       <form className="bg-white p-8 rounded-xl shadow-md w-full max-w-md" onSubmit={handleSubmit}>
         <h2 className="text-2xl font-bold text-purple-700 mb-6 text-center">OTP Verification</h2>
         <input

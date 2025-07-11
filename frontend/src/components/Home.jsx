@@ -1,10 +1,15 @@
-import React, { useState  } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import {isLoggedIn} from '../API'; // Import the isLoggedIn function from API.js
+import { logoutAPI } from '../API'; // Import the logout function from API.js
+
 
 // Main App component
 export default function Home() {
   const [fileName, setFileName] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const navigate = useNavigate();
 
   // Function to handle file upload (placeholder)
   const handleFileUpload = (event) => {
@@ -31,8 +36,41 @@ export default function Home() {
     }
   };
 
+  // Logout handler
+  const handleLogout = async () => {
+    try {
+      await logoutAPI(); // Call the logout function from API.js
+      alert('You have been logged out successfully.');
+      navigate('/');
+    } catch (error) {
+      alert('Logout failed. Please try again.');
+    }
+  };
+
+  // Check login status and redirect on Get Started
+  const handleGetStarted = async () => {
+    try {
+      const res = await isLoggedIn();
+ 
+      if (res.data.isLoggedIn) {
+        // Scroll to the UploadBox div if logged in
+        const uploadBox = document.getElementById('UploadBox');
+        if (uploadBox) {
+          uploadBox.scrollIntoView({ behavior: 'smooth' });
+        }
+      } else {
+        alert("You need to log in first.");
+        navigate('/login');
+      }
+    } catch (err) {
+              alert("You need to log in first.");
+
+      navigate('/login');
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-700 to-indigo-800 text-white font-inter relative overflow-hidden">
+    <div className="min-h-screen bg-black text-white font-inter relative overflow-hidden">
       {/* Background animation elements */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
         <div className="absolute w-64 h-64 bg-white opacity-10 rounded-full blur-3xl animate-blob animation-delay-0 top-1/4 left-1/4"></div>
@@ -41,14 +79,14 @@ export default function Home() {
       </div>
 
       {/* Header */}
-      <header className="relative z-10 p-4 md:p-6 flex flex-col md:flex-row items-center justify-between bg-black bg-opacity-20 shadow-lg rounded-b-xl mx-2 md:mx-4 mt-2">
+      <header className="relative z-10 p-4 md:p-6 flex flex-col md:flex-row items-center justify-between  rounded-b-xl mx-2 md:mx-4 mt-2">
         <div className="text-3xl font-extrabold text-white mb-4 md:mb-0">
           Excel <span className="text-green-400">Logo</span>
         </div>
         <nav>
           <ul className="flex space-x-4 md:space-x-8">
             <li>
-              <a href="/" className="text-white hover:text-red-400 transition duration-300 ease-in-out transform hover:scale-110">Home</a>
+              <a href="/" className="text-white hover:text-green-300 transition duration-300 ease-in-out transform hover:scale-110">Home</a>
                 </li>
             <li>
                 <Link to={"/about"} className="text-white hover:text-green-300 transition duration-300 ease-in-out transform hover:scale-110">About</Link>
@@ -56,12 +94,11 @@ export default function Home() {
             <li>
                 <Link to={"/contact"} className="text-white hover:text-green-300 transition duration-300 ease-in-out transform hover:scale-110">Contact</Link>
             </li>
+             <li>
+                <Link to={"/dashboard"} className="text-white hover:text-green-300 transition duration-300 ease-in-out transform hover:scale-110">Dashboard</Link>
+            </li>
             <li>
-              <a href="#" className="text-white hover:text-red-400 transition duration-300 ease-in-out transform hover:scale-110"
-              onClick={() => {
-                alert("Logout functionality is not implemented yet.");
-              }}
-              >Logout</a>
+              <button onClick={handleLogout} className='text-white hover:text-red-600 transition duration-300 ease-in-out transform hover:scale-110'>Logout</button>
             </li>
           </ul>
         </nav>
@@ -77,7 +114,7 @@ export default function Home() {
         </p>
         <button
           className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-400 focus:ring-opacity-75 animate-bounce-in"
-          onClick={() => document.getElementById('UploadBox').scrollIntoView({ behavior: 'smooth' })}
+          onClick={handleGetStarted}
         >
           Get Started
         </button>

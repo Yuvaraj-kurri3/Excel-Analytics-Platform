@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { forgotPassword } from '../API'; // Import the forgotPassword function from API.js
 // import OtpVerification from './verification';  
 
 const Forgot = () => {
@@ -12,10 +12,14 @@ const Forgot = () => {
     setResponseMsg('');
     // You can replace this with your backend API call
     try {
-      let response= await axios.post('/api/auth/forgot', { email });
+      let response= await forgotPassword(email);
+      console.log(response);
       if(response.data.message === 'OTP sent to your email.') {
         setResponseMsg('OTP sent to your email. Redirecting to verification page...');
-        setTimeout(() => navigate('/OtpVerification'), 1000);
+        setTimeout(() => navigate('/OtpVerification'), 2500);
+      }
+      else {
+        setResponseMsg(response.data.message || 'Enter correct Email.');
       }
      } catch (error) {
       setResponseMsg('Something went wrong. Please try again.');
@@ -24,6 +28,7 @@ const Forgot = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-purple-600 to-pink-500">
+            <title>ForgotPassword -EAP</title>
       <form className="bg-white p-8 rounded-xl shadow-md w-full max-w-md" onSubmit={handleSubmit}>
         <h2 className="text-2xl font-bold text-purple-700 mb-6 text-center">Forgot Password</h2>
         <input
