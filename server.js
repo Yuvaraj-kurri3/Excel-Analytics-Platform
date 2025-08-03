@@ -15,8 +15,8 @@ const app = express();
  
 dotenv.config();
 app.use(cors({
-  // origin: 'https://excel-analytics-platform-d8c0.onrender.com', // your frontend origin
-  origin: 'http://localhost:3000', // your frontend origin
+  origin: 'https://excel-analytics-platform-d8c0.onrender.com', // your frontend origin
+  // origin: 'http://localhost:3000', // your frontend origin
   credentials: true
 }));
 
