@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import {isLoggedIn} from '../API'; // Import the isLoggedIn function from API.js
 import { logoutAPI } from '../API'; // Import the logout function from API.js
-
+ 
 
 // Main App component
 export default function Home() {
@@ -12,19 +12,31 @@ export default function Home() {
   const navigate = useNavigate();
 
   // Function to handle file upload (placeholder)
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setFileName(file.name);
-      // Simulate upload process
-      setIsUploading(true);
-      setTimeout(() => {
-        setIsUploading(false);
-        console.log(`File "${file.name}" uploaded.`);
-        // In a real app, you would send the file to a server here
-      }, 1500);
-    }
-  };
+const handleFileUpload = (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const allowedTypes = [
+    'application/vnd.ms-excel', // .xls
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' // .xlsx
+  ];
+
+  if (!allowedTypes.includes(file.type)) {
+    alert('Only .xls or .xlsx files are supported!');
+    return;
+  }
+
+  setFileName(file.name);
+  setIsUploading(true);
+
+  // Simulate upload process
+  setTimeout(() => {
+    setIsUploading(false);
+    console.log(`File "${file.name}" uploaded.`);
+    // In a real app, send file to server here
+  }, 1500);
+};
+
 
   // Function to handle "Analyze" button click (placeholder)
   const handleAnalyze = () => {
@@ -54,10 +66,11 @@ export default function Home() {
  
       if (res.data.isLoggedIn) {
         // Scroll to the UploadBox div if logged in
-        const uploadBox = document.getElementById('UploadBox');
-        if (uploadBox) {
-          uploadBox.scrollIntoView({ behavior: 'smooth' });
-        }
+        // const uploadBox = document.getElementById('UploadBox');
+        // if (uploadBox) {
+        //   uploadBox.scrollIntoView({ behavior: 'smooth' });
+        // }
+        navigate('/dashboard'); // Redirect to dashboard if logged in
       } else {
         alert("You need to log in first.");
         navigate('/login');
@@ -136,7 +149,7 @@ export default function Home() {
         </div>
 
         {/* File Upload Section */}
-        <div className="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg p-8 rounded-2xl shadow-2xl mt-16 w-full max-w-lg animate-slide-up" id='UploadBox'>
+        {/* <div className="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg p-8 rounded-2xl shadow-2xl mt-16 w-full max-w-lg animate-slide-up" id='UploadBox'>
           <h2 className="text-3xl font-bold text-white mb-6">Upload File Here</h2>
           <div className="border-2 border-dashed border-gray-400 rounded-lg p-6 text-center cursor-pointer hover:border-green-400 transition duration-300 ease-in-out">
             <label htmlFor="file-upload" className="block text-gray-300 text-lg mb-2">
@@ -171,7 +184,7 @@ export default function Home() {
           >
             Analyze
           </button>
-        </div>
+        </div> */}
       </main>
 
       {/* Footer */}

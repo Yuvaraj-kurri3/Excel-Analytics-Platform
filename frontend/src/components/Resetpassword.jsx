@@ -17,7 +17,9 @@ const Resetpassword = () => {
           setTimeout(() => navigate('/login'), 1000);
         }
     } catch (error) {
-      setResponseMsg('Please try again.');
+      //  setResponseMsg('Please try again FROM 20.');
+      setResponseMsg(`ERROR:${error}`);
+
     }
   };
 

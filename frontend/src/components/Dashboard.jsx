@@ -1,117 +1,417 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { logoutAPI } from '../API'; // Import the logout function from API.js
-
+import { logoutAPI,Upload } from '../API'; // Import the logout function from API.js
+// import axios from 'axios';
+// Chart.js chart display component
+import {  Bar, Line, Pie, Scatter, Bubble, Radar} from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, LineElement, PointElement, Tooltip, Legend } from 'chart.js';
+// Register chart components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  LineElement,
+  PointElement,
+  Tooltip,
+  Legend
+);
+ 
 // Placeholder Components (you'll replace these with your actual content)
-const UploadContent = () => (
-  <div className="bg-gray-900 p-6 rounded-lg shadow-md mb-10">
-    <h2 className="text-2xl font-semibold text-white mb-4">Upload New File</h2>
-    <p className="text-gray-400">This is where your file upload form will go.</p>
-    {/* Add your file upload component here */}
-    <div className="mt-4 p-8 border-2 border-dashed border-gray-700 rounded-lg text-center">
-      <p className="text-gray-500">Drag and drop your Excel file here, or click to browse.</p>
-      <input type="file" className="hidden" id="file-upload" />
-      <label htmlFor="file-upload" className="mt-4 inline-block bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded cursor-pointer transition duration-200">
-        Browse Files
-      </label>
-    <p className='opcaity-0'>Supported files .xls & .xsx</p>
 
-    </div>
+
+const HistoryContent = ({ userEmail, history }) => (
+  <div className="bg-gray-900 p-6 rounded-lg shadow-md mb-10">
+
+    <h2 className="text-2xl font-semibold text-white mb-4">Your Analysis History</h2>
+    <p className="text-gray-400">View your past analysis results and generated charts.</p>
+    <ul className="mt-4 space-y-3">
+      {history && history.length > 0 ? (
+        history.map((item, idx) => (
+          <li key={idx} className="bg-gray-800 p-4 rounded-lg shadow-sm">
+            <h3 className="text-xl font-semibold text-blue-300">{item.title || item.fileName}</h3>
+            <p className="text-gray-400 text-sm">Generated on: {item.date}</p>
+            {item.chartType && <p className="text-gray-400 text-xs">Type: {item.chartType}</p>}
+          </li>
+        ))
+      ) : (
+        <li className="text-gray-400">No history found.</li>
+      )}
+    </ul>
   </div>
 );
 
-const HistoryContent = () => (
-  <div className="bg-gray-900 p-6 rounded-lg shadow-md mb-10">
-    <h2 className="text-2xl font-semibold text-white mb-4">Upload History</h2>
-    <p className="text-gray-400">Here you will see a list of all your past uploads and their statuses.</p>
-    {/* Example history table, you'd populate this dynamically */}
-    <div className="overflow-x-auto mt-4">
-      <table className="min-w-full text-left text-sm whitespace-nowrap">
-        <thead>
-          <tr className="border-b border-gray-700">
-            <th className="py-3 px-4 text-gray-400">File Name</th>
-            <th className="py-3 px-4 text-gray-400">Upload Date</th>
-            <th className="py-3 px-4 text-gray-400">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr className="border-b border-gray-800">
-            <td className="py-3 px-4">Sales_Report_Q4_2024.xlsx</td>
-            <td className="py-3 px-4 text-gray-400">2024-12-30</td>
-            <td className="py-3 px-4 text-green-500">Analyzed</td>
-          </tr>
-          <tr className="border-b border-gray-800">
-            <td className="py-3 px-4">Budget_Forecast_2025.xls</td>
-            <td className="py-3 px-4 text-gray-400">2025-01-15</td>
-            <td className="py-3 px-4 text-yellow-500">Pending</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-);
-
-const RecentChartsContent = () => (
-  <div className="bg-gray-900 p-6 rounded-lg shadow-md mb-10">
-    <h2 className="text-2xl font-semibold text-white mb-4">Your Recent Charts</h2>
-    <p className="text-gray-400">Browse your recently generated charts and visualizations.</p>
-    {/* Example chart cards, you'd populate this dynamically */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-      <div className="bg-gray-800 p-5 rounded-lg shadow-sm">
-        <h3 className="text-xl font-semibold text-blue-300 mb-2">Regional Sales Overview</h3>
-        <p className="text-gray-400 text-sm mb-3">Type: Bar Chart</p>
-        <div className="text-gray-500 text-xs">Generated: 2025-07-08</div>
-        <button className="mt-3 bg-blue-600 hover:bg-blue-700 text-white text-sm py-1 px-3 rounded transition duration-200">
-          View Chart
-        </button>
-      </div>
-      <div className="bg-gray-800 p-5 rounded-lg shadow-sm">
-        <h3 className="text-xl font-semibold text-blue-300 mb-2">Customer Acquisition Trends</h3>
-        <p className="text-gray-400 text-sm mb-3">Type: Line Chart</p>
-        <div className="text-gray-500 text-xs">Generated: 2025-07-05</div>
-        <button className="mt-3 bg-blue-600 hover:bg-blue-700 text-white text-sm py-1 px-3 rounded transition duration-200">
-          View Chart
-        </button>
+const RecentChartsContent = ({ history, onViewChart, onDeleteChart }) => {
+  const recent = (history || []).slice(0, 3);
+  return (
+    <div className="bg-gray-900 p-6 rounded-lg shadow-md mb-10">
+      <h2 className="text-2xl font-semibold text-white mb-4">Your Recent Charts</h2>
+      <p className="text-gray-400">Browse your recently generated charts and visualizations.</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+        {recent.length > 0 ? recent.map((item, idx) => (
+          <div key={idx} className="bg-gray-800 p-5 rounded-lg shadow-sm">
+            <h3 className="text-xl font-semibold text-blue-300 mb-2">{item.title || item.fileName}</h3>
+            <p className="text-gray-400 text-sm mb-3">Type: {item.chartType}</p>
+            <div className="text-gray-500 text-xs">Generated: {item.date}</div>
+            <div className="flex gap-2 mt-3">
+              <button
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm py-1 px-3 rounded transition duration-200"
+                onClick={() => onViewChart(item)}
+              >
+                View Chart
+              </button>
+              <button
+                className="bg-red-600 hover:bg-red-700 text-white text-sm py-1 px-3 rounded transition duration-200"
+                onClick={() => onDeleteChart(item)}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        )) : (
+          <div className="text-gray-400">No recent charts found.</div>
+        )}
       </div>
     </div>
-  </div>
-);
+  );
+};
+
+const generateColors = (count) => {
+  const colors = [
+    '#ff6384', '#36a2eb', '#ffcd56', '#4bc0c0',
+    '#9966ff', '#ff9f40', '#c9cbcf', '#8dd17e',
+    '#ff6b6b', '#845ec2', '#ffc75f', '#008f7a'
+  ];
+  const result = [];
+  for (let i = 0; i < count; i++) {
+    result.push(colors[i % colors.length]);
+  }
+  return result;
+};
+
+const ChartDisplay = ({ chartType, labels, values, title }) => {
+const backgroundColors = generateColors(labels.length);
+
+const data = {
+  labels,
+  datasets: [{
+    label: title,
+    data: values,
+    backgroundColor: chartType.toLowerCase().includes('pie') ? backgroundColors : backgroundColors[0],
+    borderColor: 'rgba(0,0,0,0.1)',
+    borderWidth: 1,
+  }]
+};
+
+const options = {
+  responsive: true,
+  plugins: {
+    legend: {
+      display: chartType.toLowerCase().includes('pie'),
+      position: 'top'
+    },
+    title: {
+      display: true,
+      text: title,
+      color: 'white',
+      font: {
+        size: 18
+      }
+    }
+  },
+  scales: chartType.toLowerCase().includes('pie') ? {} : {
+    x: {
+      ticks: { color: 'white' },
+      grid: { color: '#333' }
+    },
+    y: {
+      ticks: { color: 'white' },
+      grid: { color: '#333' }
+    }
+  }
+};
+
+
+  if (chartType.toLowerCase().includes('bar')) {
+    return <Bar data={data} options={options} />;
+  } else if (chartType.toLowerCase().includes('line')) {
+    return <Line key={chartType + JSON.stringify(labels) + JSON.stringify(values)}
+  data={data}
+  options={options} />;
+  } else if (chartType.toLowerCase().includes('pie')) {
+    return <Pie  key={chartType + JSON.stringify(labels) + JSON.stringify(values)}
+  data={data}
+  options={options}/>;
+  } else if (chartType.toLowerCase().includes('scatter')) {
+    return <Scatter  key={chartType + JSON.stringify(labels) + JSON.stringify(values)}
+  data={data}
+  options={options} />;
+  } else if (chartType.toLowerCase().includes('bubble')) {
+    // Bubble chart expects data in a specific format
+    const bubbleData = {
+      datasets: [
+        {
+          label: title,
+          data: values.map((v, i) => ({ x: i, y: v, r: 5 })),
+          backgroundColor: backgroundColors,
+        },
+      ],
+    };
+    return <Bubble data={bubbleData} options={options} />;
+  } else if (chartType.toLowerCase().includes('radar')) {
+    return <Radar data={data} options={options} />;
+  } else if (chartType.toLowerCase().includes('area')) {
+    // Area chart is a Line chart with fill
+    const areaData = {
+      ...data,
+      datasets: data.datasets.map(ds => ({ ...ds, fill: true }))
+    };
+    return <Line data={areaData} options={options} />;
+  } else {
+    return <p className="text-red-400">Unsupported chart type: {chartType}</p>;
+  }
+};
+
+const UploadContent = ({ userEmail, onHistoryUpdate }) => {
+  const [excelFile, setExcelFile] = useState(null);
+  const [availableKeys, setAvailableKeys] = useState([]);
+  const [labelKey, setLabelKey] = useState('');
+  const [valueKey, setValueKey] = useState('');
+  const [chartType, setChartType] = useState('Bar Chart');
+  const [response, setResponse] = useState(null);
+  const [status, setStatus] = useState('');
+
+  // Helper to get and set localStorage history per user
+  const getHistory = () => {
+    if (!userEmail) return [];
+    const all = JSON.parse(localStorage.getItem('eap_history') || '{}');
+    return all[userEmail] || [];
+  };
+  const setHistory = (historyArr) => {
+    if (!userEmail) return;
+    const all = JSON.parse(localStorage.getItem('eap_history') || '{}');
+    all[userEmail] = historyArr;
+    localStorage.setItem('eap_history', JSON.stringify(all));
+    if (onHistoryUpdate) onHistoryUpdate(historyArr);
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    setExcelFile(file);
+    setStatus('');
+    setAvailableKeys([]);
+    setLabelKey('');
+    setValueKey('');
+    setResponse(null);
+
+    const formData = new FormData();
+    formData.append('excelFile', file);
+
+    try {
+      const res = await Upload(formData, { withCredentials: true });
+      setAvailableKeys(res.data.availableKeys || []);
+    } catch (err) {
+      setStatus(err.response?.data?.error || 'Failed to analyze file');
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!excelFile || !labelKey || !valueKey || !chartType) {
+      setStatus('❌ Please fill all fields');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('excelFile', excelFile);
+    formData.append('labelKey', labelKey);
+    formData.append('valueKey', valueKey);
+    formData.append('chartType', chartType);
+
+    try {
+      const res = await Upload(formData, { withCredentials: true });
+      setResponse(res.data);
+      setStatus('✅ Chart data generated successfully.');
+      // Add to history
+      const newEntry = {
+        fileName: excelFile.name,
+        date: new Date().toISOString().slice(0, 10),
+        chartType,
+        title: res.data.chartTitle || excelFile.name
+      };
+      const prev = getHistory();
+      const updated = [newEntry, ...prev].slice(0, 10); // keep last 10
+      setHistory(updated);
+    } catch (err) {
+      setStatus(err.response?.data?.error || 'Upload failed');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-black text-white p-6">
+      <h1 className="text-3xl font-bold mb-6 text-green-400">Excel Analytics Dashboard</h1>
+      {/* File Upload */}
+      <div className="mb-4">
+        <label className="block text-sm text-gray-300 mb-1">Upload Excel File</label>
+        <input
+          type="file"
+          accept=".xls,.xlsx"
+          name='excelFile'
+          onChange={handleFileChange}
+          className="text-white bg-gray-800 p-2 rounded w-full"
+        />
+      </div>
+      {/* Dropdowns if keys available */}
+      {availableKeys.length > 0 && (
+        <>
+          <div className="mb-4">
+            <label className="block text-sm text-gray-300 mb-1">X-axis (labelKey)</label>
+            <select
+              value={labelKey}
+              onChange={(e) => setLabelKey(e.target.value)}
+              className="bg-gray-800 text-white p-2 rounded w-full"
+            >
+              <option value="">-- Select Column --</option>
+              {availableKeys.map((key) => (
+                <option key={key} value={key}>{key}</option>
+              ))}
+            </select>
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm text-gray-300 mb-1">Y-axis (valueKey)</label>
+            <select
+              value={valueKey}
+              onChange={(e) => setValueKey(e.target.value)}
+              className="bg-gray-800 text-white p-2 rounded w-full"
+            >
+              <option value="">-- Select Column --</option>
+              {availableKeys.map((key) => (
+                <option key={key} value={key}>{key}</option>
+              ))}
+            </select>
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm text-gray-300 mb-1">Chart Type</label>
+            <select
+              value={chartType}
+              onChange={(e) => setChartType(e.target.value)}
+              className="bg-gray-800 text-white p-2 rounded w-full"
+            >
+              <option>Bar Chart</option>
+              <option>Line Chart</option>
+              <option>Pie Chart</option>
+              <option>Area Chart</option>
+              <option>Scatter Chart</option>
+              <option>Bubble Chart</option>
+            </select>
+          </div>
+          <button
+            onClick={handleSubmit}
+            className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded"
+          >
+            Analyze & Generate Chart
+          </button>
+        </>
+      )}
+      {status && <p className="mt-4 text-yellow-400">{status}</p>}
+      {/* Chart Response Preview */}
+      {response && (
+        <div className="mt-8 p-4 bg-gray-900 rounded">
+          <h2 className="text-xl font-semibold mb-4 text-white">Chart Preview</h2>
+          <ChartDisplay
+            chartType={response.chartType}
+            labels={response.labels}
+            values={response.values}
+            title={response.chartTitle}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+
 
 // Main Dashboard component (now serving as the Dashboard Page)
 export default function Dashboard() {
   const navigate = useNavigate();
-  // State variables for recent uploads and analysis results
-  const [recentUploads, setRecentUploads] = useState([
-    { id: 1, name: 'Q1_Sales_Report.xlsx', date: '2025-07-01', status: 'Analyzed' },
-    { id: 2, name: 'Marketing_Campaign_Data.xls', date: '2025-06-28', status: 'Pending' },
-    { id: 3, name: 'Inventory_Audit_2025.xlsx', date: '2025-06-25', status: 'Analyzed' },
-  ]);
-
-  const [analysisResults, setAnalysisResults] = useState([
-    { id: 1, title: 'Sales Performance by Region', type: 'Chart', date: '2025-07-01' },
-    { id: 2, title: 'Customer Churn Prediction', type: 'Table', date: '2025-06-29' },
-    { id: 3, title: 'Expense Breakdown', type: 'Summary', date: '2025-06-26' },
-  ]);
-
-  // State for sidebar visibility on mobile
+  const [userEmail, setUserEmail] = useState(() => {
+    return localStorage.getItem('eap_user_email') || '';
+  });
+  const [userHistory, setUserHistory] = useState(() => {
+    if (!userEmail) return [];
+    const all = JSON.parse(localStorage.getItem('eap_history') || '{}');
+    return all[userEmail] || [];
+  });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeContent, setActiveContent] = useState('dashboard');
+  // For viewing a chart from recent charts
+  const [viewedChart, setViewedChart] = useState(null);
 
-  // State to control which main content section is displayed
-  const [activeContent, setActiveContent] = useState('dashboard'); // 'dashboard', 'upload', 'history', 'recent-charts', 'profile'
+  React.useEffect(() => {
+    if (!userEmail) {
+      const email = window.prompt('Enter your email to view your dashboard:');
+      if (email) {
+        setUserEmail(email);
+        localStorage.setItem('eap_user_email', email);
+        const all = JSON.parse(localStorage.getItem('eap_history') || '{}');
+        setUserHistory(all[email] || []);
+      }
+    }
+  }, [userEmail]);
 
-  // Logout handler
+  React.useEffect(() => {
+    if (userEmail) {
+      const all = JSON.parse(localStorage.getItem('eap_history') || '{}');
+      setUserHistory(all[userEmail] || []);
+    }
+  }, [userEmail]);
+
   const handleLogout = async () => {
     try {
-      await logoutAPI(); // Call the logout function from API.js
-      // Optionally clear any auth state here
+      await logoutAPI();
       alert("You have been logged out successfully.");
+      localStorage.removeItem('eap_user_email');
+      setUserEmail('');
+      setUserHistory([]);
       navigate('/home');
     } catch (error) {
       alert('Logout failed. Please try again.');
     }
   };
 
-  // Function to render content based on activeContent state
+  const handleHistoryUpdate = (newHistory) => {
+    setUserHistory(newHistory);
+  };
+
+
+  // Handler for viewing a chart from recent charts
+  const handleViewChart = (chart) => {
+    setViewedChart(chart);
+    setActiveContent('dashboard'); // Show in dashboard section
+  };
+
+  // Handler for deleting a chart from history
+  const handleDeleteChart = (chart) => {
+    const filtered = userHistory.filter(
+      (item) =>
+        !(item.fileName === chart.fileName && item.date === chart.date && item.chartType === chart.chartType)
+    );
+    setUserHistory(filtered);
+    // Update localStorage
+    const all = JSON.parse(localStorage.getItem('eap_history') || '{}');
+    all[userEmail] = filtered;
+    localStorage.setItem('eap_history', JSON.stringify(all));
+    // If the deleted chart is currently viewed, clear it
+    if (
+      viewedChart &&
+      viewedChart.fileName === chart.fileName &&
+      viewedChart.date === chart.date &&
+      viewedChart.chartType === chart.chartType
+    ) {
+      setViewedChart(null);
+    }
+  };
+
   const renderContent = () => {
     switch (activeContent) {
       case 'dashboard':
@@ -120,23 +420,21 @@ export default function Dashboard() {
             <h1 className="text-4xl md:text-5xl font-bold text-center mb-10">
               Welcome to Your Dashboard
             </h1>
-
             {/* Overview Cards Section */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
               <div className="bg-gray-900 p-6 rounded-lg shadow-md">
                 <h2 className="text-xl font-semibold text-green-400 mb-2">Total Files</h2>
-                <p className="text-3xl font-bold">128</p>
+                <p className="text-3xl font-bold">{userHistory.length}</p>
               </div>
               <div className="bg-gray-900 p-6 rounded-lg shadow-md">
                 <h2 className="text-xl font-semibold text-blue-400 mb-2">Analyzed Reports</h2>
-                <p className="text-3xl font-bold">95</p>
+                <p className="text-3xl font-bold">{userHistory.length}</p>
               </div>
               <div className="bg-gray-900 p-6 rounded-lg shadow-md">
                 <h2 className="text-xl font-semibold text-yellow-400 mb-2">Pending Analysis</h2>
-                <p className="text-3xl font-bold">12</p>
+                <p className="text-3xl font-bold">0</p>
               </div>
             </div>
-
             {/* Recent Uploads Section */}
             <div className="bg-gray-900 p-6 rounded-lg shadow-md mb-10">
               <h2 className="text-2xl font-semibold text-white mb-4">Recent Uploads</h2>
@@ -146,65 +444,63 @@ export default function Dashboard() {
                     <tr className="border-b border-gray-700">
                       <th className="py-3 px-4 text-gray-400">File Name</th>
                       <th className="py-3 px-4 text-gray-400">Upload Date</th>
-                      <th className="py-3 px-4 text-gray-400">Status</th>
+                      <th className="py-3 px-4 text-gray-400">Chart Type</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {recentUploads.map((upload) => (
-                      <tr key={upload.id} className="border-b border-gray-800 last:border-b-0">
-                        <td className="py-3 px-4">{upload.name}</td>
+                    {userHistory.map((upload, idx) => (
+                      <tr key={idx} className="border-b border-gray-800 last:border-b-0">
+                        <td className="py-3 px-4">{upload.fileName}</td>
                         <td className="py-3 px-4 text-gray-400">{upload.date}</td>
-                        <td className={`py-3 px-4 ${upload.status === 'Analyzed' ? 'text-green-500' : 'text-yellow-500'}`}>
-                          {upload.status}
-                        </td>
+                        <td className="py-3 px-4 text-gray-400">{upload.chartType}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             </div>
-
-            {/* Analysis Results Section */}
-            <div className="bg-gray-900 p-6 rounded-lg shadow-md">
-              <h2 className="text-2xl font-semibold text-white mb-4">Analysis Results</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {analysisResults.map((result) => (
-                  <div key={result.id} className="bg-gray-800 p-5 rounded-lg shadow-sm flex flex-col justify-between">
-                    <div>
-                      <h3 className="text-xl font-semibold text-blue-300 mb-2">{result.title}</h3>
-                      <p className="text-gray-400 text-sm mb-3">Type: {result.type}</p>
-                    </div>
-                    <div className="flex justify-between items-center text-gray-500 text-xs">
-                      <span>Generated: {result.date}</span>
-                      <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm py-1 px-3 rounded transition duration-200">
-                        View
-                      </button>
-                    </div>
-                  </div>
-                ))}
+            {/* Chart Preview Section if a chart is selected */}
+            {viewedChart && (
+              <div className="bg-gray-900 p-6 rounded-lg shadow-md mb-10">
+                <h2 className="text-xl font-semibold text-white mb-4">Chart Preview</h2>
+                <p className="text-gray-400 mb-2">Chart Type: <b>{viewedChart.chartType}</b></p>
+                {/* ChartDisplay expects chartType, labels, values, title. We'll use dummy data for preview. */}
+                <ChartDisplay
+                  chartType={viewedChart.chartType}
+                  labels={viewedChart.labels || []}
+                  values={viewedChart.values || []}
+                  title={viewedChart.title || viewedChart.fileName}
+                />
               </div>
-            </div>
+            )}
           </>
         );
       case 'upload':
-        return <UploadContent />;
+        return <UploadContent userEmail={userEmail} onHistoryUpdate={handleHistoryUpdate} />;
       case 'history':
-        return <HistoryContent />;
+        return <HistoryContent userEmail={userEmail} history={userHistory} />;
       case 'recent-charts':
-        return <RecentChartsContent />;
+        return <RecentChartsContent history={userHistory} onViewChart={handleViewChart} onDeleteChart={handleDeleteChart} />;
       case 'profile':
         return (
-          <div className="bg-gray-900 p-6 rounded-lg shadow-md mb-10">
-            <h2 className="text-2xl font-semibold text-white mb-4">User Profile</h2>
-            <p className="text-gray-400">This section will contain your profile information and settings.</p>
-            {/* Add profile details here */}
-          </div>
+            //  <!-- Admin Profile Card -->
+            
+      <div class="max-w-md mx-auto mb-8 bg-white rounded-lg shadow flex items-center p-6 space-x-6">
+        <div class="w-20 h-20 rounded-full bg-green-600 flex items-center justify-center overflow-hidden">
+          {/* <img src="https://res.cloudinary.com/dqz2hem3m/image/upload/v1750665330/logo_ep4az4.png" alt="Admin Profile" class="w-full h-full object-cover"></img> */}
+          <p style={{fontSize:"32px"}}><b>{userEmail && userEmail.split('@')[0][0].toUpperCase()}</b></p>        </div>
+        <div>
+    <p class="text-gray-600 text-sm mb-1">Name:{userEmail.split('@')[0]}
+            </p>
+          <p class="text-gray-600 text-sm mb-1">Email:{userEmail}</p>
+          <p class="text-gray-600 text-sm">Role: <span class="font-medium">user</span></p>
+        </div>
+      </div>
         );
       default:
         return null;
     }
   };
-
 
   return (
     <div className="min-h-screen bg-black text-white font-inter">
@@ -239,7 +535,6 @@ export default function Dashboard() {
           </button>
         </div>
       </header>
-
       {/* Main Content Area */}
       <div className="flex flex-col md:flex-row">
         {/* Sidebar */}
@@ -295,17 +590,14 @@ export default function Dashboard() {
             </ul>
           </nav>
         </aside>
-
         {/* Overlay for mobile sidebar */}
         {isSidebarOpen && (
           <div className="fixed inset-0 bg-black opacity-50 z-30 md:hidden" onClick={() => setIsSidebarOpen(false)}></div>
         )}
-
         <main className="flex-1 p-4 md:p-8 max-w-7xl mx-auto">
           {renderContent()}
         </main>
       </div>
-
       {/* Footer */}
       <footer className="py-6 text-center text-gray-500 mt-10">
         <p>&copy; 2025 Excel Analytics Platform. All rights reserved.</p>

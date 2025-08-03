@@ -2,18 +2,21 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const multer= require('multer');
 const authRoutes = require('./backend/routes/auth'); // ✅ Corrected path
 const session = require('express-session');
 // const mongooseSession = require('connect-mongodb-session')(session);
 const MongoStore = require('connect-mongo');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const fs = require('fs');
 const app = express();
 
  
 dotenv.config();
 app.use(cors({
-  origin: 'https://excel-analytics-platform-d8c0.onrender.com', // your frontend origin
+  // origin: 'https://excel-analytics-platform-d8c0.onrender.com', // your frontend origin
+  origin: 'http://localhost:3000', // your frontend origin
   credentials: true
 }));
 
@@ -43,6 +46,34 @@ app.use(session({
     secure: true
   }
 }));
+// ✅ Ensure uploads folder exists
+const uploadPath = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadPath)) {
+  fs.mkdirSync(uploadPath);
+}
+
+
+// ✅ Define storage configuration
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
+  },
+});
+
+
+// ✅ File type filter (only allow .xls and .xlsx)
+const fileFilter = (req, file, cb) => {
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (ext !== '.xls' && ext !== '.xlsx') {
+    return cb(new Error('Only .xls and .xlsx files are allowed'));
+  }
+  cb(null, true);
+};
+ 
+const upload = multer({ storage, fileFilter });
 
 
 app.use(express.static(path.join(__dirname, 'frontend/build')));

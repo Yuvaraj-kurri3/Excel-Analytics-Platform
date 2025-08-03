@@ -74,7 +74,7 @@ const teamMembers = [
     image: PROFILE_IMAGES[5],
     social: {
       github: "https://github.com/Yuvaraj-kurri3",
-      linkedin: "https://linkedin.com/in/kurriyuvaraj",
+      linkedin: "https://linkedin.com/in/yuvarajkurri",
       other: "https://www.instagram.com/undobharatofficial/"
     }
   }
@@ -159,10 +159,10 @@ export default function About() {
         <nav>
           <ul className="flex space-x-4 md:space-x-8">
             <li>
-              <a href="/" className="text-white hover:text-green-300 transition duration-200">Dashboard</a>
+              <a href="/dashboard" className="text-white hover:text-green-300 transition duration-200">Dashboard</a>
             </li>
             <li>
-              <a href="/home" className="text-white hover:text-green-300 transition duration-200">Home</a>
+              <a href="/" className="text-white hover:text-green-300 transition duration-200">Home</a>
             </li>
             <li>
               <a href="/" className="text-white hover:text-green-300 transition duration-200">Reports</a>
