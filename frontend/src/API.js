@@ -1,7 +1,7 @@
 import axios from "axios";
 axios.defaults.withCredentials = true;
-const BASE_URL = "http://localhost:5000"; // Change this to your backend URL if needed
-// const BASE_URL = "https://excel-analytics-backend.onrender.com";
+// const BASE_URL = "http://localhost:5000"; // Change this to your backend URL if needed
+const BASE_URL = "https://excel-analytics-backend.onrender.com";
 
 
 export const login = (data) => {
@@ -49,26 +49,5 @@ export const Upload = (formData) => {
 };
 
 
-export const Gethistroy = (userEmail) => {
-   return axios.get(`${BASE_URL}/api/chart-history`, { params: { email: userEmail }, withCredentials: true });
-};
 
- 
-
- export const deleteChartHistoryByuser = (chart) => {
-  return axios.delete(`${BASE_URL}/api/chart-history/${chart._id}`);
-  // axios.delete(`/api/chart-history/${chart._id}`);
-          // const res = await axios.get('/api/chart-history', { params: { email: userEmail } });
-
-};
-//postdata
-
-export const postdata = (data) => {
-  return axios.post(`${BASE_URL}/api/chart-history`, data, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    withCredentials: true
-  });
-}
  
