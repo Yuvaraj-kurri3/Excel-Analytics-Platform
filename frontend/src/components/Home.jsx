@@ -32,7 +32,7 @@ const handleFileUpload = (event) => {
   // Simulate upload process
   setTimeout(() => {
     setIsUploading(false);
-    console.log(`File "${file.name}" uploaded.`);
+    // console.log(`File "${file.name}" uploaded.`);
     // In a real app, send file to server here
   }, 1500);
 };
@@ -41,7 +41,7 @@ const handleFileUpload = (event) => {
   // Function to handle "Analyze" button click (placeholder)
   const handleAnalyze = () => {
     if (fileName) {
-      console.log(`Analyzing file: ${fileName}`);
+      // console.log(`Analyzing file: ${fileName}`);
       alert(`Analyzing "${fileName}". Results will be displayed here!`);
     } else {
       alert("Please upload an Excel file first.");

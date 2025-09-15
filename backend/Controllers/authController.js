@@ -197,8 +197,7 @@ exports.verifyToken = (req, res, next) => {
 exports.isLoggedIn = (req, res) => {
   const token = req.cookies.token;
   const IsLogined = req.cookies.IsLogined;
-  console.log("🔐 IsLogined:", IsLogined);
-  console.log("🔐 Token:", token);
+   
   // console.log("🔐 IsLogined:", IsLogined)
   // console.log("🔐 Token:", token);
 
@@ -291,4 +290,34 @@ exports.getChartHistory = async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'Unable to retrieve chart history' });
   }
+};
+
+
+// In your controller
+const ChartHistory = require('../models/chartHistory');
+
+exports.saveChartHistory = async (req, res) => {
+  const { email, fileName, chartType, chartTitle, labels, values } = req.body;
+  const history = new ChartHistory({
+    email,
+    fileName,
+    chartType,
+    chartTitle,
+    labels,
+    values,
+    date: new Date()
+  });
+  await history.save();
+  res.status(201).json(history);
+};
+
+exports.getChartHistory = async (req, res) => {
+  const { email } = req.query;
+  const history = await ChartHistory.find({ email }).sort({ date: -1 }).limit(10);
+  res.json(history);
+};
+
+exports.deleteChartHistory = async (req, res) => {
+  await ChartHistory.findByIdAndDelete(req.params.id);
+  res.sendStatus(204);
 };

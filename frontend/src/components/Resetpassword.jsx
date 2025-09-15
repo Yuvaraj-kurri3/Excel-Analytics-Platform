@@ -11,7 +11,7 @@ const Resetpassword = () => {
     setResponseMsg('');
     try {
         let response = await resetPassword(newpassword);
-        console.log(response.data.message);
+        // console.log(response.data.message);
         if (response.data.message === 'Password reset successful') {
           setResponseMsg('Password reset successful. Redirecting to login...');
           setTimeout(() => navigate('/login'), 1000);

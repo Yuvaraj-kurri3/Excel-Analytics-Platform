@@ -32,7 +32,7 @@ const App = () => {
     }
 
     // Simulate form submission (e.g., sending data to an API)
-    console.log('Form Data Submitted:', formData);
+    // console.log('Form Data Submitted:', formData);
 
     // Display success message
     setSubmitMessage('Message sent successfully! We will get back to you soon.');

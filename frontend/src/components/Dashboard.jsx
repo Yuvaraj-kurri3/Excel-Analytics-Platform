@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { logoutAPI,Upload } from '../API'; // Import the logout function from API.js
+import { logoutAPI, Upload, Gethistroy , deleteChartHistoryByuser,postdata} from '../API'; // Import the logout function from API.js
+import axios from 'axios';
 // import axios from 'axios';
 // Chart.js chart display component
 import {  Bar, Line, Pie, Scatter, Bubble, Radar} from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, LineElement, PointElement, Tooltip, Legend } from 'chart.js';
+// import { deleteChartHistory } from '../../../backend/Controllers/authController';
 // Register chart components
 ChartJS.register(
   CategoryScale,
@@ -30,7 +32,7 @@ const HistoryContent = ({ userEmail, history }) => (
         history.map((item, idx) => (
           <li key={idx} className="bg-gray-800 p-4 rounded-lg shadow-sm">
             <h3 className="text-xl font-semibold text-blue-300">{item.title || item.fileName}</h3>
-            <p className="text-gray-400 text-sm">Generated on: {item.date}</p>
+            <p className="text-gray-400 text-sm">Generated on: {item.createdAt.slice(0,10)}</p>
             {item.chartType && <p className="text-gray-400 text-xs">Type: {item.chartType}</p>}
           </li>
         ))
@@ -50,9 +52,9 @@ const RecentChartsContent = ({ history, onViewChart, onDeleteChart }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
         {recent.length > 0 ? recent.map((item, idx) => (
           <div key={idx} className="bg-gray-800 p-5 rounded-lg shadow-sm">
-            <h3 className="text-xl font-semibold text-blue-300 mb-2">{item.title || item.fileName}</h3>
+            <h3 className="text-base font-semibold text-blue-300 mb-2" >{item.title || item.fileName}</h3>
             <p className="text-gray-400 text-sm mb-3">Type: {item.chartType}</p>
-            <div className="text-gray-500 text-xs">Generated: {item.date}</div>
+            <div className="text-gray-500 text-xs">Generated: {item.createdAt.slice(0,10)}</div>
             <div className="flex gap-2 mt-3">
               <button
                 className="bg-blue-600 hover:bg-blue-700 text-white text-sm py-1 px-3 rounded transition duration-200"
@@ -181,20 +183,6 @@ const UploadContent = ({ userEmail, onHistoryUpdate }) => {
   const [response, setResponse] = useState(null);
   const [status, setStatus] = useState('');
 
-  // Helper to get and set localStorage history per user
-  const getHistory = () => {
-    if (!userEmail) return [];
-    const all = JSON.parse(localStorage.getItem('eap_history') || '{}');
-    return all[userEmail] || [];
-  };
-  const setHistory = (historyArr) => {
-    if (!userEmail) return;
-    const all = JSON.parse(localStorage.getItem('eap_history') || '{}');
-    all[userEmail] = historyArr;
-    localStorage.setItem('eap_history', JSON.stringify(all));
-    if (onHistoryUpdate) onHistoryUpdate(historyArr);
-  };
-
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     setExcelFile(file);
@@ -231,16 +219,19 @@ const UploadContent = ({ userEmail, onHistoryUpdate }) => {
       const res = await Upload(formData, { withCredentials: true });
       setResponse(res.data);
       setStatus('✅ Chart data generated successfully.');
-      // Add to history
-      const newEntry = {
+      // Save chart history to backend
+
+      await postdata({ email: userEmail,
         fileName: excelFile.name,
-        date: new Date().toISOString().slice(0, 10),
         chartType,
-        title: res.data.chartTitle || excelFile.name
-      };
-      const prev = getHistory();
-      const updated = [newEntry, ...prev].slice(0, 10); // keep last 10
-      setHistory(updated);
+        chartTitle: res.data.chartTitle || excelFile.name,
+        labels: res.data.labels,
+        values: res.data.values,
+        xAxis: labelKey,
+        yAxis: valueKey,});
+      // Fetch updated history
+      const historyRes = await Gethistroy({ params: { email: userEmail } });
+      if (onHistoryUpdate) onHistoryUpdate(historyRes.data);
     } catch (err) {
       setStatus(err.response?.data?.error || 'Upload failed');
     }
@@ -337,33 +328,39 @@ export default function Dashboard() {
   const [userEmail, setUserEmail] = useState(() => {
     return localStorage.getItem('eap_user_email') || '';
   });
-  const [userHistory, setUserHistory] = useState(() => {
-    if (!userEmail) return [];
-    const all = JSON.parse(localStorage.getItem('eap_history') || '{}');
-    return all[userEmail] || [];
-  });
+  const [userHistory, setUserHistory] = useState([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeContent, setActiveContent] = useState('dashboard');
   // For viewing a chart from recent charts
   const [viewedChart, setViewedChart] = useState(null);
+  // console.log("User Email:", userEmail);
 
-  React.useEffect(() => {
-    if (!userEmail) {
+ 
+
+  useEffect(() => {
+
+      if (!userEmail) {
       const email = window.prompt('Enter your email to view your dashboard:');
       if (email) {
         setUserEmail(email);
         localStorage.setItem('eap_user_email', email);
-        const all = JSON.parse(localStorage.getItem('eap_history') || '{}');
-        setUserHistory(all[email] || []);
       }
     }
-  }, [userEmail]);
-
-  React.useEffect(() => {
-    if (userEmail) {
-      const all = JSON.parse(localStorage.getItem('eap_history') || '{}');
-      setUserHistory(all[userEmail] || []);
-    }
+    const fetchHistory = async () => {
+          // console.log("Fetching chart history for email from 360:", userEmail);
+      if (userEmail) {
+        try {
+          const res = await Gethistroy({ params: { email: userEmail } });
+          setUserHistory(res.data);
+        } catch (err) {
+          const email = window.prompt('Enter your email to view your dashboard:');
+          setUserEmail(email);
+        localStorage.setItem('eap_user_email', email);
+          setUserHistory([]);
+        }
+      }
+    };
+    fetchHistory();
   }, [userEmail]);
 
   const handleLogout = async () => {
@@ -373,7 +370,7 @@ export default function Dashboard() {
       localStorage.removeItem('eap_user_email');
       setUserEmail('');
       setUserHistory([]);
-      navigate('/home');
+      navigate('/');
     } catch (error) {
       alert('Logout failed. Please try again.');
     }
@@ -391,24 +388,23 @@ export default function Dashboard() {
   };
 
   // Handler for deleting a chart from history
-  const handleDeleteChart = (chart) => {
-    const filtered = userHistory.filter(
-      (item) =>
-        !(item.fileName === chart.fileName && item.date === chart.date && item.chartType === chart.chartType)
-    );
-    setUserHistory(filtered);
-    // Update localStorage
-    const all = JSON.parse(localStorage.getItem('eap_history') || '{}');
-    all[userEmail] = filtered;
-    localStorage.setItem('eap_history', JSON.stringify(all));
-    // If the deleted chart is currently viewed, clear it
-    if (
-      viewedChart &&
-      viewedChart.fileName === chart.fileName &&
-      viewedChart.date === chart.date &&
-      viewedChart.chartType === chart.chartType
-    ) {
-      setViewedChart(null);
+  const handleDeleteChart = async (chart) => {
+    try {
+      await deleteChartHistoryByuser(chart);
+      // await axios.delete(`/api/chart-history/${chart._id}`);
+      // Fetch updated history
+
+      const res= await Gethistroy({ params: { email: userEmail } });
+      // const res = await axios.get('/api/chart-history', { params: { email: userEmail } });
+      setUserHistory(res.data);
+      if (
+        viewedChart &&
+        viewedChart._id === chart._id
+      ) {
+        setViewedChart(null);
+      }
+    } catch (err) {
+      alert('Failed to delete chart history.');
     }
   };
 
@@ -451,7 +447,7 @@ export default function Dashboard() {
                     {userHistory.map((upload, idx) => (
                       <tr key={idx} className="border-b border-gray-800 last:border-b-0">
                         <td className="py-3 px-4">{upload.fileName}</td>
-                        <td className="py-3 px-4 text-gray-400">{upload.date}</td>
+                        <td className="py-3 px-4 text-gray-400">{upload.createdAt.slice(0,10)}</td>
                         <td className="py-3 px-4 text-gray-400">{upload.chartType}</td>
                       </tr>
                     ))}
@@ -539,6 +535,20 @@ export default function Dashboard() {
       <div className="flex flex-col md:flex-row">
         {/* Sidebar */}
         <aside className={`w-64 bg-gray-800 p-6 space-y-6 md:relative fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition duration-200 ease-in-out z-40 md:z-auto`}>
+          <div className="text-3xl font-extrabold text-white mb-4">
+            Excel <span className="text-green-400">Analytics Platform</span>
+          </div>
+          {/* Mobile-only links under the heading */}
+          <div className="mb-6 md:hidden">
+            <ul className="space-y-2">
+              <li>
+                <a href="/" className="block text-white hover:text-green-300 transition duration-200">Home</a>
+              </li>
+              <li>
+                <button onClick={handleLogout} className="block w-full text-left text-white hover:text-red-400 transition duration-200 bg-transparent border-none cursor-pointer">Logout</button>
+              </li>
+            </ul>
+          </div>
           <div className="text-2xl font-bold text-white mb-8">Navigation</div>
           <nav>
             <ul className="space-y-4">

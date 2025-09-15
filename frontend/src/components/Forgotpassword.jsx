@@ -13,7 +13,7 @@ const Forgot = () => {
     // You can replace this with your backend API call
     try {
       let response= await forgotPassword(email);
-      console.log(response);
+      // console.log(response);
       if(response.data.message === 'OTP sent to your email.') {
         setResponseMsg('OTP sent to your email. Redirecting to verification page...');
         setTimeout(() => navigate('/OtpVerification'), 2500);

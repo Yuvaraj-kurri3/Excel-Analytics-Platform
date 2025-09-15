@@ -15,8 +15,8 @@ const app = express();
  
 dotenv.config();
 app.use(cors({
-  origin: 'https://excel-analytics-platform-d8c0.onrender.com', // your frontend origin
-  // origin: 'http://localhost:3000', // your frontend origin
+  // origin: 'https://excel-analytics-platform-d8c0.onrender.com', // your frontend origin
+  origin: 'http://localhost:3000', // your frontend origin
   credentials: true
 }));
 
@@ -87,7 +87,9 @@ mongoose.connect(process.env.MONGODB_URI,{
 
  
 
+const chartHistoryRoutes = require('./backend/routes/chartHistory');
 app.use('/api/auth', authRoutes);
+app.use('/api/chart-history', chartHistoryRoutes);
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend/build', 'index.html'));
