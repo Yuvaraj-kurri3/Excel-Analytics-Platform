@@ -1,7 +1,8 @@
 import axios from "axios";
+// Removed incorrect import from backend controller
 axios.defaults.withCredentials = true;
-// const BASE_URL = "http://localhost:5000"; // Change this to your backend URL if needed
-const BASE_URL = "https://excel-analytics-backend.onrender.com";
+const BASE_URL = "http://localhost:5000"; // Change this to your backend URL if needed
+// const BASE_URL = "https://excel-analytics-backend.onrender.com";
 
 
 export const login = (data) => {
@@ -48,6 +49,28 @@ export const Upload = (formData) => {
   });
 };
 
+// Only one getChartHistory export should exist. If you want to fetch all chart history, use:
+export const getChartHistory = () => {
+  return axios.get(`${BASE_URL}/api/chart-history`, {
+    withCredentials: true
+  });
+};
+export const saveChartHistory = (data) => {
+  return axios.post(`${BASE_URL}/api/chart-history`, data, {
+    withCredentials: true
+  });
+}
 
+export const deleteChartHistory = (id) => {
+  return axios.delete(`${BASE_URL}/api/chart-history/${id}`, {
+    withCredentials: true
+  });
+}
+
+export const getname = () => {
+  return axios.get(`${BASE_URL}/api/chart-histroy/name`, {
+    withCredentials: true
+  });
+};
 
  

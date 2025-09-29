@@ -94,13 +94,18 @@ const handleFileUpload = (event) => {
       {/* Header */}
       <header className="relative z-10 p-4 md:p-6 flex flex-col md:flex-row items-center justify-between  rounded-b-xl mx-2 md:mx-4 mt-2">
         <div className="text-3xl font-extrabold text-white mb-4 md:mb-0">
-          Excel <span className="text-green-400">Logo</span>
-        </div>
+<a href="/">
+
+          <img src="https://png.pngtree.com/png-clipart/20200722/original/pngtree-analytics-a-letter-colorful-logo-png-image_5002880.jpg" alt="LOGO"   style={{ width: "60px", height: "60px", objectFit: "cover", marginRight: "12px", borderRadius: "50%"
+            }}/>
+
+</a>        </div>
         <nav>
           <ul className="flex space-x-4 md:space-x-8">
             <li>
               <a href="/" className="text-white hover:text-green-300 transition duration-300 ease-in-out transform hover:scale-110">Home</a>
                 </li>
+                 
             <li>
                 <Link to={"/about"} className="text-white hover:text-green-300 transition duration-300 ease-in-out transform hover:scale-110">About</Link>
             </li>

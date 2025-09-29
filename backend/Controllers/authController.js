@@ -17,8 +17,7 @@ const mongooseSession = require('connect-mongodb-session')(session);
  
 exports.signup = async (req, res) => {
   const { username, email, password } = req.body;
-  console.log(req.body);
-  try {
+   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ error: 'Email already exists' });
 
@@ -180,7 +179,7 @@ exports.logout = async (req, res) => {
 
 // Middleware to verify JWT token from cookies
 exports.verifyToken = (req, res, next) => {
-  const token = req.session.user.TOKEN ;
+  const token = req.cookies.token;
   if (!token) {
     return res.status(401).json({ isLoggedIn: false, error: 'No token provided' });
   }

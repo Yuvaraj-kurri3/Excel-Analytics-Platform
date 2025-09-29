@@ -10,10 +10,13 @@ import Dashboard from './components/Dashboard';
 import Forgot from './components/Forgotpassword'; // Uncomment if you want to use Forgot password component
 import OtpVerification from './components/verification';
 import Resetpassword from './components/Resetpassword';  
+ 
 
 function App() {
   return (
+    
     <Routes>
+      
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/about" element={<About />} />
@@ -24,6 +27,7 @@ function App() {
       <Route path="/forgot" element={<Forgot  />} />
       <Route path="/OtpVerification" element={<OtpVerification />} />
       <Route path="/Resetpassword" element={<Resetpassword />} />
+   
 
     </Routes>
   );

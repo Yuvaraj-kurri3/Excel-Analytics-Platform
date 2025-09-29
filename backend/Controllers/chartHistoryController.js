@@ -7,10 +7,9 @@ const chartHistory = require('../models/chartHistory');
 // Save chart history and file
 exports.saveChartHistory = async (req, res) => {
   try {
-    const { email, fileName, chartType, chartTitle, labels, values, xAxis, yAxis } = req.body;
-    // Find user by email
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ error: 'User not found' });
+    const { fileName, chartType, chartTitle, labels, values, xAxis, yAxis } = req.body;
+    const userId = req.user ? req.user.id : null;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
     let filePath = '';
     if (req.file) {
       // Save file to uploads folder
@@ -20,7 +19,7 @@ exports.saveChartHistory = async (req, res) => {
       fs.writeFileSync(filePath, req.file.buffer);
     }
     const chartHistory = new ChartHistory({
-      user: user._id,
+      user: userId,
       fileName,
       chartType,
       chartTitle,
@@ -40,12 +39,14 @@ exports.saveChartHistory = async (req, res) => {
 // Get chart history by email
 exports.getChartHistory = async (req, res) => {
   try {
-    const { email } = req.params;
-    // console.log("Fetching chart history for email:", email);
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ error: 'User not found' });
-    const history = await ChartHistory.find({ user: user._id }).sort({ createdAt: -1 });
-    res.json(history);
+  // Only show charts for the logged-in user
+  // console.log("User from token:", req.user);
+  const userId = req.user ? req.user.id : null;
+  // console.log("User ID:", userId);
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  const history = await ChartHistory.find({ user: userId }).sort({ createdAt: -1 });
+  // console.log("Fetched chart history:", history);
+  res.json(history);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch chart history.' });
   }
@@ -59,5 +60,21 @@ exports.deleteChartHistory = async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete chart history.' });
+  }
+};
+
+
+exports.getname = async (req, res) => {
+  try {
+  // Only show charts for the logged-in user
+  // console.log("User from token:", req.user);
+  const userId = req.user ? req.user._id : null;
+  // console.log("User ID:", userId);
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  const namee = await User.find({ user: userId }).sort({ createdAt: -1 });
+  console.log("Name:", namee);
+  res.json(namee);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch Details.' });
   }
 };

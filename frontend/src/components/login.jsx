@@ -29,6 +29,8 @@ const Login = () => {
       setResponseMsg(response.data.message || 'Login successful!');
       if (response.data.message === 'Login successfull') {
          // Redirect to dashboard or home page after successful login
+         localStorage.setItem('islogined', 'true');
+         localStorage.setItem('eap_user_email_l', form.email);
         setTimeout(() => navigate('/'), 1000);
       }
     } catch (error) {

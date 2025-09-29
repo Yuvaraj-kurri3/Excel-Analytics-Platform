@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { logoutAPI, Upload, Gethistroy , deleteChartHistoryByuser,postdata} from '../API'; // Import the logout function from API.js
-import axios from 'axios';
+import { logoutAPI, Upload,getChartHistory, saveChartHistory,deleteChartHistory} from '../API'; // Import the logout function from API.js
+// import axios from 'axios';
 // import axios from 'axios';
 // Chart.js chart display component
 import {  Bar, Line, Pie, Scatter, Bubble, Radar} from 'react-chartjs-2';
@@ -51,6 +51,7 @@ const RecentChartsContent = ({ history, onViewChart, onDeleteChart }) => {
       <p className="text-gray-400">Browse your recently generated charts and visualizations.</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
         {recent.length > 0 ? recent.map((item, idx) => (
+          // alert(item._id),
           <div key={idx} className="bg-gray-800 p-5 rounded-lg shadow-sm">
             <h3 className="text-base font-semibold text-blue-300 mb-2" >{item.title || item.fileName}</h3>
             <p className="text-gray-400 text-sm mb-3">Type: {item.chartType}</p>
@@ -64,7 +65,7 @@ const RecentChartsContent = ({ history, onViewChart, onDeleteChart }) => {
               </button>
               <button
                 className="bg-red-600 hover:bg-red-700 text-white text-sm py-1 px-3 rounded transition duration-200"
-                onClick={() => onDeleteChart(item)}
+                onClick={() => onDeleteChart(item._id)}
               >
                 Delete
               </button>
@@ -221,7 +222,7 @@ const UploadContent = ({ userEmail, onHistoryUpdate }) => {
       setStatus('✅ Chart data generated successfully.');
       // Save chart history to backend
 
-      await postdata({ email: userEmail,
+      await saveChartHistory({ email: userEmail,
         fileName: excelFile.name,
         chartType,
         chartTitle: res.data.chartTitle || excelFile.name,
@@ -230,7 +231,7 @@ const UploadContent = ({ userEmail, onHistoryUpdate }) => {
         xAxis: labelKey,
         yAxis: valueKey,});
       // Fetch updated history
-      const historyRes = await Gethistroy({ params: { email: userEmail } });
+  const historyRes = await getChartHistory();
       if (onHistoryUpdate) onHistoryUpdate(historyRes.data);
     } catch (err) {
       setStatus(err.response?.data?.error || 'Upload failed');
@@ -308,12 +309,53 @@ const UploadContent = ({ userEmail, onHistoryUpdate }) => {
       {response && (
         <div className="mt-8 p-4 bg-gray-900 rounded">
           <h2 className="text-xl font-semibold mb-4 text-white">Chart Preview</h2>
-          <ChartDisplay
-            chartType={response.chartType}
-            labels={response.labels}
-            values={response.values}
-            title={response.chartTitle}
-          />
+          {/* Chart container for export */}
+          <div id="chart-export-container">
+            <ChartDisplay
+              chartType={response.chartType}
+              labels={response.labels}
+              values={response.values}
+              title={response.chartTitle}
+            />
+          </div>
+          <div className="flex gap-4 mt-4">
+            <button
+              className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
+              onClick={() => {
+                // Download chart as image
+                const chartCanvas = document.querySelector('#chart-export-container canvas');
+                if (chartCanvas) {
+                  const url = chartCanvas.toDataURL('image/png');
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.download = `${response.chartTitle || 'chart'}.png`;
+                  link.click();
+                }
+              }}
+            >
+              Download as Image
+            </button>
+            <button
+              className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded"
+              onClick={() => {
+                // Download chart as PDF
+                import('jspdf').then(jsPDFModule => {
+                  const jsPDF = jsPDFModule.jsPDF;
+                  const chartCanvas = document.querySelector('#chart-export-container canvas');
+                  if (chartCanvas) {
+                    const imgData = chartCanvas.toDataURL('image/png');
+                    const pdf = new jsPDF({ orientation: 'landscape' });
+                    const width = pdf.internal.pageSize.getWidth();
+                    const height = pdf.internal.pageSize.getHeight();
+                    pdf.addImage(imgData, 'PNG', 10, 10, width - 20, height - 20);
+                    pdf.save(`${response.chartTitle || 'chart'}.pdf`);
+                  }
+                });
+              }}
+            >
+              Download as PDF
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -325,9 +367,8 @@ const UploadContent = ({ userEmail, onHistoryUpdate }) => {
 // Main Dashboard component (now serving as the Dashboard Page)
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [userEmail, setUserEmail] = useState(() => {
-    return localStorage.getItem('eap_user_email') || '';
-  });
+  // No need for userEmail state, backend uses JWT
+  const [userEmail, setUserEmail] = useState('');
   const [userHistory, setUserHistory] = useState([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeContent, setActiveContent] = useState('dashboard');
@@ -338,36 +379,28 @@ export default function Dashboard() {
  
 
   useEffect(() => {
-
-      if (!userEmail) {
-      const email = window.prompt('Enter your email to view your dashboard:');
-      if (email) {
-        setUserEmail(email);
-        localStorage.setItem('eap_user_email', email);
-      }
-    }
     const fetchHistory = async () => {
-          // console.log("Fetching chart history for email from 360:", userEmail);
-      if (userEmail) {
-        try {
-          const res = await Gethistroy({ params: { email: userEmail } });
-          setUserHistory(res.data);
-        } catch (err) {
-          const email = window.prompt('Enter your email to view your dashboard:');
-          setUserEmail(email);
-        localStorage.setItem('eap_user_email', email);
-          setUserHistory([]);
-        }
+ 
+      try {
+        const res = await getChartHistory();
+        // const name=await getname();
+        // setUserEmail(name.data.name);
+        setUserHistory(res.data);
+        // console.log('Fetched chart history:', res.data);
+       const mail=localStorage.getItem('eap_user_email_l');
+       setUserEmail(mail);
+      } catch (err) {
+        setUserHistory([]);
       }
     };
     fetchHistory();
-  }, [userEmail]);
+  }, []);
 
   const handleLogout = async () => {
     try {
       await logoutAPI();
       alert("You have been logged out successfully.");
-      localStorage.removeItem('eap_user_email');
+      localStorage.removeItem('eap_user_email_l');
       setUserEmail('');
       setUserHistory([]);
       navigate('/');
@@ -387,15 +420,11 @@ export default function Dashboard() {
     setActiveContent('dashboard'); // Show in dashboard section
   };
 
-  // Handler for deleting a chart from history
-  const handleDeleteChart = async (chart) => {
+    const handleDeleteChart = async (chart) => {
     try {
-      await deleteChartHistoryByuser(chart);
-      // await axios.delete(`/api/chart-history/${chart._id}`);
-      // Fetch updated history
-
-      const res= await Gethistroy({ params: { email: userEmail } });
-      // const res = await axios.get('/api/chart-history', { params: { email: userEmail } });
+      await deleteChartHistory(chart);
+      // Fetch updated history (no email filter)
+            const res = await getChartHistory();
       setUserHistory(res.data);
       if (
         viewedChart &&
@@ -480,16 +509,17 @@ export default function Dashboard() {
       case 'profile':
         return (
             //  <!-- Admin Profile Card -->
-            
-      <div class="max-w-md mx-auto mb-8 bg-white rounded-lg shadow flex items-center p-6 space-x-6">
-        <div class="w-20 h-20 rounded-full bg-green-600 flex items-center justify-center overflow-hidden">
-          {/* <img src="https://res.cloudinary.com/dqz2hem3m/image/upload/v1750665330/logo_ep4az4.png" alt="Admin Profile" class="w-full h-full object-cover"></img> */}
-          <p style={{fontSize:"32px"}}><b>{userEmail && userEmail.split('@')[0][0].toUpperCase()}</b></p>        </div>
+           
+ 
+      <div className="max-w-md mx-auto mb-8 bg-white rounded-lg shadow flex items-center p-6 space-x-6">
+        <div className="w-20 h-20 rounded-full bg-green-600 flex items-center justify-center overflow-hidden">
+          {/* <img src="https://res.cloudinary.com/dqz2hem3m/image/upload/v1750665330/logo_ep4az4.png" alt="Admin Profile" className="w-full h-full object-cover" /> */}
+          <p style={{fontSize:"32px"}}><b>{userEmail ? userEmail.split('@')[0][0].toUpperCase() : '?'}</b></p>
+        </div>
         <div>
-    <p class="text-gray-600 text-sm mb-1">Name:{userEmail.split('@')[0]}
-            </p>
-          <p class="text-gray-600 text-sm mb-1">Email:{userEmail}</p>
-          <p class="text-gray-600 text-sm">Role: <span class="font-medium">user</span></p>
+          <p className="text-gray-600 text-sm mb-1">Name: {userEmail ? userEmail.split('@')[0] : 'Unknown'}</p>
+          <p className="text-gray-600 text-sm mb-1">Email: {userEmail || 'Unknown'}</p>
+          <p className="text-gray-600 text-sm">Role: <span className="font-medium">user</span></p>
         </div>
       </div>
         );
@@ -501,6 +531,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-black text-white font-inter">
       <title>Dashboard -EAP</title>
+      {/* title image*/ }
       {/* Header */}
       <header className="p-4 md:p-6 flex flex-col md:flex-row items-center justify-between bg-gray-900 shadow-lg rounded-xl mb-6">
         <div className="text-3xl font-extrabold text-white mb-4 md:mb-0">
@@ -511,6 +542,7 @@ export default function Dashboard() {
             <li>
               <a href="/" className="text-white hover:text-green-300 transition duration-200">Home</a>
             </li>
+             
             <li>
               <a href="/about" className="text-white hover:text-green-300 transition duration-200">About</a>
             </li>
@@ -544,6 +576,7 @@ export default function Dashboard() {
               <li>
                 <a href="/" className="block text-white hover:text-green-300 transition duration-200">Home</a>
               </li>
+               
               <li>
                 <button onClick={handleLogout} className="block w-full text-left text-white hover:text-red-400 transition duration-200 bg-transparent border-none cursor-pointer">Logout</button>
               </li>

@@ -9,6 +9,9 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const adminRoutes = require('./backend/routes/admin');
+const chartHistoryRoutes = require('./backend/routes/chartHistory');
+
 const fs = require('fs');
 const app = express();
 
@@ -87,9 +90,9 @@ mongoose.connect(process.env.MONGODB_URI,{
 
  
 
-const chartHistoryRoutes = require('./backend/routes/chartHistory');
 app.use('/api/auth', authRoutes);
 app.use('/api/chart-history', chartHistoryRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend/build', 'index.html'));
